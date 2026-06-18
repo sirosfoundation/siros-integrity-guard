@@ -1,0 +1,24 @@
+[package]
+name = "siros-integrity-guard"
+version = "0.1.0"
+edition = "2021"
+description = "Binary integrity wrapper — verifies HSM-signed manifest before exec'ing the protected service (FPT_TST.1)"
+license = "BSD-2-Clause"
+repository = "https://github.com/sirosfoundation/siros-integrity-guard"
+
+[[bin]]
+name = "siros-integrity-guard"
+path = "src/main.rs"
+
+[dependencies]
+ed25519-dalek = { version = "2", features = ["pkcs8"] }
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+nix = { version = "0.29", features = ["process"] }
+hex = "0.4"
+clap = { version = "4", features = ["derive", "env"] }
+base64ct = { version = "1", features = ["alloc"] }
+
+[dev-dependencies]
+tempfile = "3"

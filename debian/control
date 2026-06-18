@@ -1,0 +1,31 @@
+Source: siros-integrity-guard
+Section: admin
+Priority: optional
+Maintainer: SIROS Foundation <info@siros.org>
+Build-Depends: debhelper-compat (= 13),
+               cargo,
+               rustc (>= 1.75),
+               pkg-config,
+               libssl-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/sirosfoundation/siros-integrity-guard
+Vcs-Git: https://github.com/sirosfoundation/siros-integrity-guard.git
+Vcs-Browser: https://github.com/sirosfoundation/siros-integrity-guard
+Rules-Requires-Root: no
+
+Package: siros-integrity-guard
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
+Recommends: softhsm2
+Description: Binary integrity wrapper for CC FPT_TST.1 compliance
+ siros-integrity-guard verifies an HSM-signed manifest of file digests
+ before exec'ing a protected service binary. It implements the FPT_TST.1
+ self-test requirement from Common Criteria (NOBCCS protection profile).
+ .
+ Features:
+  - PKCS#11/HSM-based HMAC-SHA256 manifest signature verification
+  - fs-verity kernel measurement with SHA-256 fallback
+  - Debugger attachment detection via /proc/self/status
+  - Static musl binary (~1-2 MB) suitable for minimal containers
+  - Zero-overhead: exec's the target binary after verification

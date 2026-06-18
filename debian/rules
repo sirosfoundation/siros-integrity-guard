@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export CARGO_HOME = $(CURDIR)/debian/cargo
+
+# Check if pre-built binary exists
+GUARD_BIN := $(CURDIR)/target/release/siros-integrity-guard
+BINARY_EXISTS := $(shell test -x $(GUARD_BIN) && echo yes)
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+ifeq ($(BINARY_EXISTS),yes)
+	@echo "Preserving pre-built binary"
+else
+	cargo clean || true
+	rm -rf $(CARGO_HOME)
+endif
+
+override_dh_auto_build:
+ifeq ($(BINARY_EXISTS),yes)
+	@echo "Using pre-built binary from target/release/"
+else
+	cargo build --release
+endif
+
+override_dh_auto_test:
+	# Skip tests during package build (run in CI)
+	true
+
+override_dh_auto_install:
+	install -D -m 755 target/release/siros-integrity-guard \
+		$(CURDIR)/debian/siros-integrity-guard/usr/bin/siros-integrity-guard
