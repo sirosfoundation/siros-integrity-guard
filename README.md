@@ -1,16 +1,20 @@
 # siros-integrity-guard
 
+[![CI](https://github.com/sirosfoundation/siros-integrity-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/sirosfoundation/siros-integrity-guard/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sirosfoundation/siros-integrity-guard/badge)](https://scorecard.dev/viewer/?uri=github.com/sirosfoundation/siros-integrity-guard)
+[![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD--2--Clause-blue.svg)](LICENSE)
+
 Binary integrity wrapper for Common Criteria FPT_TST.1 compliance.
 
-Verifies an HSM-signed manifest of file digests before `exec`'ing a
+Verifies an Ed25519-signed manifest of file digests before `exec`'ing a
 protected service binary. Designed for container entrypoints in the
 SIROS ID ecosystem.
 
 ## How it works
 
 1. Load a JSON manifest listing files and their expected SHA-256 digests
-2. Verify the manifest's HMAC-SHA256 signature via PKCS#11 (HSM)
-3. For each file: try `FS_IOC_MEASURE_VERITY` (kernel fs-verity), fall back to SHA-256
+2. Verify the manifest's Ed25519 signature using a public key file
+3. For each file: try `FS_IOC_MEASURE_VERITY` (kernel fs-verity), fall back to userspace SHA-256
 4. Check `/proc/self/status` for debugger attachment (`TracerPid`)
 5. `execvp()` the target binary — the guard process is replaced entirely
 
@@ -23,12 +27,15 @@ SIROS ID ecosystem.
     {"path": "/app/server", "digest": "sha256-hex-here"},
     {"path": "/app/config.toml", "digest": "sha256-hex-here"}
   ],
-  "signature": "hmac-sha256-hex-here"
+  "signature": "ed25519-signature-hex-here"
 }
 ```
 
 The signature covers the canonical JSON of the `version` and `files` fields
-(i.e. the manifest with the `signature` field removed).
+(i.e. the manifest with the `signature` field removed and re-serialized).
+
+Manifests are signed offline using an Ed25519 private key (e.g. on a
+YubiHSM2). The guard only needs the 32-byte public key at runtime.
 
 ## Usage
 
@@ -36,20 +43,22 @@ The signature covers the canonical JSON of the `version` and `files` fields
 siros-integrity-guard \
   --manifest /app/manifest.json \
   --exec /app/r2ps-server \
-  --pkcs11-module /usr/lib/softhsm/libsofthsm2.so \
-  --pkcs11-slot 0 \
-  --pkcs11-pin 1234 \
-  --key-label integrity-guard \
+  --pubkey /app/integrity.pub \
   -- --listen 0.0.0.0:8080
 ```
+
+The `--pubkey` flag accepts raw 32-byte binary, 64-char hex, or
+`ssh-ed25519` format. It can also be set via the `INTEGRITY_PUBKEY`
+environment variable.
 
 ### Container entrypoint
 
 ```dockerfile
+COPY integrity.pub /app/integrity.pub
 ENTRYPOINT ["/usr/bin/siros-integrity-guard", \
   "--manifest", "/app/manifest.json", \
   "--exec", "/app/r2ps-server", \
-  "--pkcs11-module", "/usr/lib/softhsm/libsofthsm2.so"]
+  "--pubkey", "/app/integrity.pub"]
 ```
 
 ## Building
