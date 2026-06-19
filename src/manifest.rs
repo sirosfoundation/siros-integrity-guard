@@ -148,11 +148,7 @@ mod tests {
     fn test_reject_empty_files() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("manifest.json");
-        std::fs::write(
-            &path,
-            r#"{"version":1,"files":[],"signature":"ff"}"#,
-        )
-        .unwrap();
+        std::fs::write(&path, r#"{"version":1,"files":[],"signature":"ff"}"#).unwrap();
 
         let result = Manifest::load(path.to_str().unwrap());
         assert!(matches!(result, Err(ManifestError::EmptyFileList)));

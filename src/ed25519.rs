@@ -14,11 +14,11 @@ pub fn verify_manifest_signature(
     let verifying_key =
         VerifyingKey::from_bytes(pubkey_bytes).map_err(|_| Ed25519Error::InvalidPublicKey)?;
 
-    let signature = Signature::from_slice(signature_bytes)
-        .map_err(|_| Ed25519Error::InvalidSignature)?;
+    let signature =
+        Signature::from_slice(signature_bytes).map_err(|_| Ed25519Error::InvalidSignature)?;
 
-    let payload =
-        Manifest::signed_payload(raw_manifest).map_err(|e| Ed25519Error::Manifest(e.to_string()))?;
+    let payload = Manifest::signed_payload(raw_manifest)
+        .map_err(|e| Ed25519Error::Manifest(e.to_string()))?;
 
     verifying_key
         .verify(&payload, &signature)
@@ -58,8 +58,7 @@ pub fn load_public_key(path: &str) -> Result<[u8; 32], Ed25519Error> {
         let parts: Vec<&str> = trimmed.split_whitespace().collect();
         if parts.len() >= 2 {
             use base64ct::{Base64, Encoding};
-            let blob = Base64::decode_vec(parts[1])
-                .map_err(|_| Ed25519Error::InvalidPublicKey)?;
+            let blob = Base64::decode_vec(parts[1]).map_err(|_| Ed25519Error::InvalidPublicKey)?;
             // SSH wire format: 4-byte length + "ssh-ed25519" + 4-byte length + 32-byte key
             if blob.len() >= 51 {
                 // Skip type string (4 + 11 = 15 bytes), then 4-byte length

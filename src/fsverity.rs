@@ -39,8 +39,13 @@ pub fn measure(path: &str) -> Result<String, FsVerityError> {
         digest: [0u8; MAX_DIGEST_SIZE as usize],
     };
 
-    let ret =
-        unsafe { libc::ioctl(fd, FS_IOC_MEASURE_VERITY as libc::c_ulong, &mut digest as *mut _) };
+    let ret = unsafe {
+        libc::ioctl(
+            fd,
+            FS_IOC_MEASURE_VERITY as libc::c_ulong,
+            &mut digest as *mut _,
+        )
+    };
 
     if ret < 0 {
         let err = io::Error::last_os_error();
