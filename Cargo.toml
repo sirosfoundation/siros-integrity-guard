@@ -6,6 +6,10 @@ description = "Binary integrity wrapper — verifies HSM-signed manifest before 
 license = "BSD-2-Clause"
 repository = "https://github.com/sirosfoundation/siros-integrity-guard"
 
+[lib]
+name = "siros_integrity_guard"
+path = "src/lib.rs"
+
 [[bin]]
 name = "siros-integrity-guard"
 path = "src/main.rs"
